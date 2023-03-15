@@ -1,36 +1,33 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
+
+const windowOrigin = "https://embed.diagrams.net";
+const iframeUrl = `${windowOrigin}?embed=1&libraries=1&saveAndExit=1&proto=json`;
 
 export const IntegrationApp: FC = () => {
   const [config, setConfig] = useState<Config | null>(null);
-  const [projectId, setProjectId] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
-  const [itemName, setItemName] = useState<string | null>(null);
-  const [watchedElementValue, setWatchedElementValue] = useState<string | null>(null);
-  const [selectedAssetNames, setSelectedAssetNames] = useState<ReadonlyArray<string>>([]);
-  const [selectedItemNames, setSelectedItemNames] = useState<ReadonlyArray<string>>([]);
-  const [elementValue, setElementValue] = useState<string | null>(null);
+  const [elementValue, setElementValue] = useState<Value | null>(null);
+  const [editWindow, setEditWindow] = useState<null | Window>(null);
 
-  const updateWatchedElementValue = useCallback((codename: string) => {
-    CustomElement.getElementValue(codename, v => typeof v === 'string' && setWatchedElementValue(v));
+  const setValue = useCallback((v: Value) => {
+    setElementValue(v);
+    CustomElement.setValue(JSON.stringify(v));
   }, []);
 
   useEffect(() => {
     CustomElement.init((element, context) => {
       if (!isConfig(element.config)) {
-        throw new Error('Invalid configuration of the custom element. Please check the documentation.');
+        // throw new Error('Invalid configuration of the custom element. Please check the documentation.');
       }
 
       setConfig(element.config);
-      setProjectId(context.projectId);
       setIsDisabled(element.disabled);
-      setItemName(context.item.name);
-      setElementValue(element.value ?? '');
-      updateWatchedElementValue(element.config.textElementCodename);
+      setElementValue(JSON.parse(element.value || "null"));
     });
-  }, [updateWatchedElementValue]);
+  }, []);
 
   useEffect(() => {
-    CustomElement.setHeight(500);
+    CustomElement.setHeight(1200);
   }, []);
 
   useEffect(() => {
@@ -38,60 +35,40 @@ export const IntegrationApp: FC = () => {
   }, []);
 
   useEffect(() => {
-    CustomElement.observeItemChanges(i => setItemName(i.name));
-  }, []);
+    const listener = () => setTimeout(() => editWindow?.closed && setEditWindow(null), 100);
+
+    document.addEventListener("visibilitychange", listener);
+
+    return () => document.removeEventListener("visibilitychange", listener);
+  }, [editWindow]);
+
+  console.log(editWindow);
 
   useEffect(() => {
-    if (!config) {
+    if (!editWindow) {
       return;
     }
-    CustomElement.observeElementChanges([config.textElementCodename], () => updateWatchedElementValue(config.textElementCodename));
-  }, [config, updateWatchedElementValue]);
+    const listener = eventHandler(editWindow, () => setEditWindow(null), elementValue, setValue);
+    window.addEventListener("message", listener);
 
-  const selectAssets = () =>
-    CustomElement.selectAssets({ allowMultiple: true, fileType: 'all' })
-      .then(ids => CustomElement.getAssetDetails(ids?.map(i => i.id) ?? []))
-      .then(assets => setSelectedAssetNames(assets?.map(asset => asset.name) ?? []));
+    return () => window.removeEventListener("message", listener);
+  }, [editWindow, elementValue]);
 
-  const selectItems = () =>
-    CustomElement.selectItems({ allowMultiple: true })
-      .then(ids => CustomElement.getItemDetails(ids?.map(i => i.id) ?? []))
-      .then(items => setSelectedItemNames(items?.map(item => item.name) ?? []));
+  const editDiagram = () => setEditWindow(window.open(iframeUrl, "_blank"));
 
-  const updateValue = (newValue: string) => {
-    CustomElement.setValue(newValue);
-    setElementValue(newValue);
-  };
+  const focusEditor = () => editWindow?.focus();
 
-  if (!config || !projectId || elementValue === null || watchedElementValue === null || itemName === null) {
-    return null;
-  }
+  // if (!config) {
+  //   return null;
+  // }
 
   return (
     <>
-      <h1>
-        This is a great integration with the Kontent.ai app.
-      </h1>
-      <section>
-        projectId: {projectId}; item name: {itemName}
-      </section>
-      <section>
-        configuration: {JSON.stringify(config)}
-      </section>
-      <section>
-        <input value={elementValue} onChange={e => updateValue(e.target.value)} disabled={isDisabled} />
-      </section>
-      <section>
-        This is the watched element: {watchedElementValue}
-      </section>
-      <section>
-        These are your selected asset names: {selectedAssetNames.join(', ')}
-        <button onClick={selectAssets}>Select different assets</button>
-      </section>
-      <section>
-        These are your selected item names: {selectedItemNames.join(', ')}
-        <button onClick={selectItems}>Select different items</button>
-      </section>
+      {editWindow && <div>You are currently editting the diagram.</div>}
+      {elementValue
+        ? <img src={elementValue.dataUrl} onClick={editWindow ? focusEditor : editDiagram} />
+        : <button onClick={editWindow ? focusEditor : editDiagram}>No diagram yet, click here to create one</button>
+      }
     </>
   );
 };
@@ -100,14 +77,11 @@ IntegrationApp.displayName = 'IntegrationApp';
 
 type Config = Readonly<{
   // expected custom element's configuration
-  textElementCodename: string;
 }>;
 
 // check it is the expected configuration
 const isConfig = (v: unknown): v is Config =>
-  isObject(v) &&
-  hasProperty(nameOf<Config>('textElementCodename'), v) &&
-  typeof v.textElementCodename === 'string';
+  isObject(v);
 
 const hasProperty = <PropName extends string, Input extends {}>(propName: PropName, v: Input): v is Input & { [key in PropName]: unknown } =>
   v.hasOwnProperty(propName);
@@ -117,3 +91,57 @@ const isObject = (v: unknown): v is {} =>
   v !== null;
 
 const nameOf = <Obj extends Readonly<Record<string, unknown>>>(prop: keyof Obj) => prop;
+
+type Value = Readonly<{
+  xml: string;
+  dataUrl: string;
+}>;
+
+const eventHandler = (editorWindow: Window, onEditWindowClosed: () => void, value: Value | null, saveValue: (v: Value) => void) => (event: any) => {
+  if (event.origin !== windowOrigin) {
+    return;
+  }
+  const data = JSON.parse(event.data);
+
+  const sendExportMessage = () => {
+    editorWindow.postMessage(JSON.stringify({
+      action: "export",
+      format: "svg",
+    }), "*");
+  };
+
+  switch (data.event) {
+    case "init": {
+      editorWindow.postMessage(JSON.stringify({
+        action: "load",
+        xml: value?.xml ?? '',
+        autosave: 1,
+      }), "*");
+      return;
+    }
+    case "autosave": {
+      sendExportMessage();
+      return;
+    }
+    case "save": {
+      sendExportMessage();
+      if (data.exit) {
+        editorWindow.close();
+        onEditWindowClosed();
+      }
+      return;
+    }
+    case "export": {
+      saveValue({
+        xml: data.xml,
+        dataUrl: data.data,
+      });
+      return;
+    }
+    case "exit": {
+      editorWindow.close();
+      onEditWindowClosed();
+      return;
+    }
+  }
+}
