@@ -11,7 +11,11 @@ export type Value = Readonly<{
 }>;
 
 export type Config = Readonly<{
-  // expected custom element's configuration
+  previewBorder?: Readonly<{
+    color: string;
+    weight: number;
+  }>;
+  configuration?: Readonly<Record<string, unknown>>;
 }>;
 
 type Params = Readonly<{
@@ -63,9 +67,15 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
   }
 };
 
-// check it is the expected configuration
-const isConfig = (v: unknown): v is Config =>
-  true; // no config for now
+const isStrictlyConfig: (v: unknown) => v is Config = tg.ObjectOf({
+  previewBorder: tg.OptionalOf(tg.ObjectOf({
+    color: tg.isString,
+    weight: tg.isNumber,
+  })),
+  configuration: tg.OptionalOf(tg.isObject),
+});
+
+const isConfig: (v: unknown) => v is Config | null = tg.OneOf([tg.isNull, isStrictlyConfig]);
 
 const isValue: (v: unknown) => v is Value = tg.ObjectOf({
   xml: tg.isString,

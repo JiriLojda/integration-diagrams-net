@@ -2,16 +2,17 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { handleDiagramsEvent } from './handleDiagramsEvent';
 import { Button } from './ui/Button';
 import { NotificationBar } from './ui/NotificationBar';
-import { useCustomElementContext, Value } from './useCustomElementContext';
+import { useCustomElementContext } from './useCustomElementContext';
 
-const windowOrigin = "https://embed.diagrams.net";
-const iframeUrl = `${windowOrigin}?embed=1&libraries=1&saveAndExit=1&proto=json`;
+const editorWindowOrigin = "https://embed.diagrams.net";
+const editorUrl = `${editorWindowOrigin}?embed=1&configure=1&libraries=1&saveAndExit=1&proto=json`;
 
 export const IntegrationApp: FC = () => {
-  const [editWindow, setEditWindow] = useState<null | Window>(null);
+  const [editorWindow, setEditorWindow] = useState<null | Window>(null);
   const [isUnmountingNotificationBar, setIsUnmountingNotificationBar] = useState(false);
 
   const {
+    config,
     value,
     setValue,
   } = useCustomElementContext({
@@ -20,17 +21,17 @@ export const IntegrationApp: FC = () => {
   });
 
   useEffect(() => {
-    const listener = () => setTimeout(() => editWindow?.closed && setIsUnmountingNotificationBar(true), 100);
+    const listener = () => setTimeout(() => editorWindow?.closed && setIsUnmountingNotificationBar(true), 100);
 
     document.addEventListener("visibilitychange", listener);
 
     return () => document.removeEventListener("visibilitychange", listener);
-  }, [editWindow]);
+  }, [editorWindow]);
 
   useEffect(() => {
     if (isUnmountingNotificationBar) {
       setTimeout(() => {
-        setEditWindow(null);
+        setEditorWindow(null);
         setIsUnmountingNotificationBar(false);
       }, 500);
     }
@@ -38,26 +39,33 @@ export const IntegrationApp: FC = () => {
 
   const closeEditor = useCallback(() => {
     setIsUnmountingNotificationBar(true);
-    editWindow?.close();
-  }, [editWindow]);
+    editorWindow?.close();
+  }, [editorWindow]);
 
   useEffect(() => {
-    if (!editWindow) {
+    if (!editorWindow) {
       return;
     }
-    const listener = handleDiagramsEvent(windowOrigin, editWindow, closeEditor, value, setValue);
+    const listener = handleDiagramsEvent({
+      editorWindowOrigin,
+      editorWindow,
+      closeEditor,
+      value,
+      setValue,
+      config,
+    });
     window.addEventListener("message", listener);
 
     return () => window.removeEventListener("message", listener);
-  }, [editWindow, closeEditor, value]);
+  }, [editorWindow, closeEditor, value]);
 
-  const editDiagram = () => setEditWindow(window.open(iframeUrl, "_blank"));
+  const editDiagram = () => setEditorWindow(window.open(editorUrl, "_blank"));
 
-  const focusEditor = () => editWindow?.focus();
+  const focusEditor = () => editorWindow?.focus();
 
   return (
     <>
-      {editWindow && (
+      {editorWindow && (
         <NotificationBar isUnmounting={isUnmountingNotificationBar}>
           You are currently editting the diagram.
           <Button isInverted onClick={focusEditor}>Go to the editor</Button>
@@ -67,13 +75,15 @@ export const IntegrationApp: FC = () => {
       <main className="container_center">
         {value
           ? <img
-            className="diagram-preview"
             height={value.dimensions.height}
             width={value.dimensions.width}
             src={value.dataUrl}
-            onClick={editWindow ? focusEditor : editDiagram}
+            onClick={editorWindow ? focusEditor : editDiagram}
+            style={{
+              border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
+            }}
           />
-          : <Button onClick={editWindow ? focusEditor : editDiagram}>No diagram yet, click here to create one</Button>
+          : <Button onClick={editorWindow ? focusEditor : editDiagram}>No diagram yet, click here to create one</Button>
         }
       </main>
     </>

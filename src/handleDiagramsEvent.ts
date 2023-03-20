@@ -1,12 +1,21 @@
 import * as tg from "@gabrielurbina/type-guard";
-import { Value } from "./useCustomElementContext";
+import { Config, Value } from "./useCustomElementContext";
 
-export const handleDiagramsEvent = (windowOrigin: string, editorWindow: Window, closeEditWindow: () => void, value: Value | null, saveValue: (v: Value) => void) =>
+type Params = Readonly<{
+  editorWindowOrigin: string;
+  editorWindow: Window;
+  closeEditor: () => void;
+  value: Value | null;
+  setValue: (v: Value) => void;
+  config: Config | null;
+}>;
+
+export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, closeEditor, value, setValue }: Params) =>
   (event: any) => {
-    if (event.origin !== windowOrigin) {
+    if (event.origin !== editorWindowOrigin) {
       return;
     }
-    const postMessage = createPostMessage(editorWindow, windowOrigin);
+    const postMessage = createPostMessage(editorWindow, editorWindowOrigin);
     const data = JSON.parse(event.data);
 
     if (!isExpectedEvent(data)) {
@@ -30,6 +39,13 @@ export const handleDiagramsEvent = (windowOrigin: string, editorWindow: Window, 
         });
         return;
       }
+      case "configure": {
+        postMessage({
+          action: "configure",
+          config: config?.configuration ?? {},
+        });
+        return;
+      }
       case "autosave": {
         sendExportMessage();
         return;
@@ -37,12 +53,12 @@ export const handleDiagramsEvent = (windowOrigin: string, editorWindow: Window, 
       case "save": {
         sendExportMessage();
         if (data.exit) {
-          closeEditWindow();
+          closeEditor();
         }
         return;
       }
       case "export": {
-        saveValue({
+        setValue({
           xml: data.xml,
           dataUrl: data.data,
           dimensions: {
@@ -53,7 +69,7 @@ export const handleDiagramsEvent = (windowOrigin: string, editorWindow: Window, 
         return;
       }
       case "exit": {
-        closeEditWindow();
+        closeEditor();
         return;
       }
     }
@@ -70,7 +86,12 @@ type LoadMessage = Readonly<{
   autosave?: 1;
 }>;
 
-const createPostMessage = (targetWindow: Window, windowOrigin: string) => (message: ExportMessage | LoadMessage) =>
+type ConfigureMessage = Readonly<{
+  action: "configure",
+  config: Readonly<Record<string, unknown>>;
+}>;
+
+const createPostMessage = (targetWindow: Window, windowOrigin: string) => (message: ExportMessage | LoadMessage | ConfigureMessage) =>
   targetWindow.postMessage(JSON.stringify(message), windowOrigin);
 
 type InitEvent = Readonly<{
@@ -95,8 +116,13 @@ type ExportEvent = Readonly<{
 type ExitEvent = Readonly<{
   event: "exit";
 }>;
+type ConfigureEvent = Readonly<{
+  event: "configure";
+}>;
 
-type ExpectedEvent = InitEvent | AutosaveEvent | SaveEvent | ExportEvent | ExitEvent;
+type PossibleEventsOrdered = readonly [InitEvent, AutosaveEvent, SaveEvent, ExportEvent, ExitEvent, ConfigureEvent];
+
+type ExpectedEvent = PossibleEventsOrdered[number];
 
 const isInitEvent: (v: unknown) => v is InitEvent = tg.ObjectOf({
   event: tg.ValueOf(["init" as const]),
@@ -111,7 +137,7 @@ const isSaveEvent: (v: unknown) => v is SaveEvent = tg.ObjectOf({
   exit: tg.OptionalOf(tg.isBoolean),
 });
 
-const isExportEvent: (v: unknown) => v is ExpectedEvent = tg.ObjectOf({
+const isExportEvent: (v: unknown) => v is ExportEvent = tg.ObjectOf({
   event: tg.ValueOf(["export" as const]),
   xml: tg.isString,
   data: tg.isString,
@@ -121,5 +147,21 @@ const isExportEvent: (v: unknown) => v is ExpectedEvent = tg.ObjectOf({
   }),
 });
 
-const isExpectedEvent: (v: unknown) => v is ExpectedEvent = tg.OneOf([isInitEvent, isAutosaveEvent, isSaveEvent, isExportEvent]);
+const isExitEvent: (v: unknown) => v is ExitEvent = tg.ObjectOf({
+  event: tg.ValueOf(["exit" as const]),
+});
+
+const isConfigureEvent: (v: unknown) => v is ConfigureEvent = tg.ObjectOf({
+  event: tg.ValueOf(["configure" as const]),
+});
+
+type MakeGuards<T, Accum extends readonly any[] = []> = T extends readonly [infer First, ...infer Rest]
+  ? MakeGuards<Rest, [...Accum, tg.Guard<First>]>
+  : Accum;
+
+type EventGuards = MakeGuards<PossibleEventsOrdered>;
+
+const eventGuards: EventGuards = [isInitEvent, isAutosaveEvent, isSaveEvent, isExportEvent, isExitEvent, isConfigureEvent];
+
+const isExpectedEvent: (v: unknown) => v is ExpectedEvent = tg.OneOf(eventGuards);
 
