@@ -53,7 +53,7 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
       setValue(parsedValue);
       setHeight((parsedValue?.dimensions.height ?? emptyHeight) + heightPadding);
     });
-  }, []);
+  }, [emptyHeight, heightPadding]);
 
   useEffect(() => {
     CustomElement.onDisabledChanged(setIsDisabled);

@@ -57,7 +57,7 @@ export const IntegrationApp: FC = () => {
     window.addEventListener("message", listener);
 
     return () => window.removeEventListener("message", listener);
-  }, [editorWindow, closeEditor, value]);
+  }, [editorWindow, closeEditor, value, setValue, config]);
 
   const editDiagram = () => setEditorWindow(window.open(editorUrl, "_blank"));
 
@@ -83,6 +83,7 @@ export const IntegrationApp: FC = () => {
               Delete diagram
             </Button>
             <img
+              alt="Preview of the current diagram"
               height={value.dimensions.height}
               width={value.dimensions.width}
               src={value.dataUrl}
