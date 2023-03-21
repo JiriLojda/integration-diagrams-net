@@ -29,11 +29,11 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
   const [value, setValue] = useState<Value | null>(null);
   const [height, setHeight] = useState(heightPadding + emptyHeight)
 
-  const updateValue = useCallback((v: Value) => {
+  const updateValue = useCallback((v: Value | null) => {
     setValue(v);
     CustomElement.setValue(JSON.stringify(v));
-    setHeight(v.dimensions.height + heightPadding);
-  }, []);
+    setHeight((v?.dimensions.height ?? emptyHeight) + heightPadding);
+  }, [emptyHeight, heightPadding]);
 
   useLayoutEffect(() => {
     CustomElement.setHeight(height);

@@ -1,9 +1,20 @@
-.container_center {
+main {
   display: flex;
-  width: 100%;
   justify-content: center;
   padding: 20px;
   padding-top: 80px;
+  width: 100%;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-areas:
+    ". btn"
+    "preview preview";
+  grid-template-columns: auto min-content;
+  grid-template-rows: min-content auto;
+  width: 100%;
+  justify-items: center;
 }
 
 .notification-bar {

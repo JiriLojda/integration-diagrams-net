@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { handleDiagramsEvent } from './handleDiagramsEvent';
-import { Button } from './ui/Button';
+import { Button, ButtonType } from './ui/Button';
 import { NotificationBar } from './ui/NotificationBar';
 import { useCustomElementContext } from './useCustomElementContext';
 
@@ -16,8 +16,8 @@ export const IntegrationApp: FC = () => {
     value,
     setValue,
   } = useCustomElementContext({
-    heightPadding: 100,
-    emptyHeight: 80,
+    heightPadding: 180,
+    emptyHeight: 0,
   });
 
   useEffect(() => {
@@ -68,22 +68,39 @@ export const IntegrationApp: FC = () => {
       {editorWindow && (
         <NotificationBar isUnmounting={isUnmountingNotificationBar}>
           You are currently editting the diagram.
-          <Button isInverted onClick={focusEditor}>Go to the editor</Button>
-          <Button isInverted onClick={closeEditor}>Close the editor</Button>
+          <Button type={ButtonType.PrimaryInverted} onClick={focusEditor}>Go to the editor</Button>
+          <Button type={ButtonType.PrimaryInverted} onClick={closeEditor}>Close the editor</Button>
         </NotificationBar>
       )}
-      <main className="container_center">
+      <main>
         {value
-          ? <img
-            height={value.dimensions.height}
-            width={value.dimensions.width}
-            src={value.dataUrl}
-            onClick={editorWindow ? focusEditor : editDiagram}
-            style={{
-              border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
-            }}
-          />
-          : <Button onClick={editorWindow ? focusEditor : editDiagram}>No diagram yet, click here to create one</Button>
+          ? <div className="preview-grid">
+            <Button
+              type={ButtonType.SecondaryDestructive}
+              onClick={() => setValue(null)}
+              style={{ gridArea: "btn" }}
+            >
+              Delete diagram
+            </Button>
+            <img
+              height={value.dimensions.height}
+              width={value.dimensions.width}
+              src={value.dataUrl}
+              onClick={editorWindow ? focusEditor : editDiagram}
+              style={{
+                border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
+                gridArea: "preview",
+              }}
+            />
+          </div>
+          : (
+            <Button
+              type={ButtonType.Primary}
+              onClick={editorWindow ? focusEditor : editDiagram}
+            >
+              No diagram yet, click here to create one
+            </Button>
+          )
         }
       </main>
     </>
