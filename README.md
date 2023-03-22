@@ -24,7 +24,7 @@ You can also provide a [configuration](#Configuration) to the element, but it is
 
 > The diagrams.net editor is opened in a new tab so that you have enough space for your diagram.
 > Changes in the editor are auto-saved to Kontent.ai.
-> However, if you leave the item editing in the Kontent.ai tab, the connection breaks and further changes to the diagram won't be saved.
+> However, if you leave the item editing or switch to a different content group in the Kontent.ai tab, the connection breaks and further changes to the diagram won't be saved.
 
 ## Configuration
 
