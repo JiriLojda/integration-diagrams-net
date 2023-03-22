@@ -31,6 +31,14 @@ You can also provide a [configuration](#Configuration) to the element, but it is
 You can provide an optional configuration. See the example bellow.
 https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L3-L13
 
+## Deploy
+
+To use the custom element you need to deploy it.
+
+Netlify has made this easy. If you click the deploy button below, it will guide you through the process of deploying it and leave you with a copy of the repository in your account as well.
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/JiriLojda/integration-diagrams-net)
+
 ## Saved value
 
 This is an example of a value saved in the custom element that can be used on your site. Keep in mind that it is serialized into string.
