@@ -28,6 +28,7 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
   const [isDisabled, setIsDisabled] = useState(false);
   const [value, setValue] = useState<Value | null>(null);
   const [height, setHeight] = useState(heightPadding + emptyHeight)
+  const [isLoading, setIsLoading] = useState(true);
 
   const updateValue = useCallback((v: Value | null) => {
     setValue(v);
@@ -52,6 +53,7 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
       setIsDisabled(element.disabled);
       setValue(parsedValue);
       setHeight((parsedValue?.dimensions.height ?? emptyHeight) + heightPadding);
+      setIsLoading(false);
     });
   }, [emptyHeight, heightPadding]);
 
@@ -64,6 +66,7 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
     isDisabled,
     value,
     setValue: updateValue,
+    isLoading,
   }
 };
 

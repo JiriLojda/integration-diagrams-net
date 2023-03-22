@@ -15,6 +15,7 @@ export const IntegrationApp: FC = () => {
     config,
     value,
     setValue,
+    isLoading,
   } = useCustomElementContext({
     heightPadding: 180,
     emptyHeight: 0,
@@ -62,6 +63,10 @@ export const IntegrationApp: FC = () => {
   const editDiagram = () => setEditorWindow(window.open(editorUrl, "_blank"));
 
   const focusEditor = () => editorWindow?.focus();
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <>
