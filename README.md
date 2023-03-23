@@ -9,7 +9,7 @@
 
 # Kontent.ai integration with diagrams.net
 
-This integration contains a custom element that you can use in Kontent.ai to create and edit diagrams in diagrams.net directly from the Kontent.ai app.
+This integration contains a [custom element](https://kontent.ai/learn/tutorials/develop-apps/integrate/content-editing-extensions/) that you can use in Kontent.ai to create and edit diagrams in diagrams.net directly from the Kontent.ai app.
 The custom element stores the created diagram in the `xml` format and a data url to use it on your site.
 
 # Getting Started
