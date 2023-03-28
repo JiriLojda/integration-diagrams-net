@@ -116,4 +116,3 @@ export const IntegrationApp: FC = () => {
 
 IntegrationApp.displayName = 'IntegrationApp';
 
-

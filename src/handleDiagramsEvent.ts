@@ -32,11 +32,18 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
     // You can find more info about events and messages here https://www.diagrams.net/doc/faq/embed-mode
     switch (data.event) {
       case "init": {
-        postMessage({
-          action: "load",
-          xml: value?.xml ?? '',
-          autosave: 1,
-        });
+        if (!value) {
+          postMessage({
+            action: "template",
+          });
+        }
+        else {
+          postMessage({
+            action: "load",
+            xml: value?.xml ?? '',
+            autosave: 1,
+          });
+        }
         return;
       }
       case "configure": {
@@ -91,7 +98,11 @@ type ConfigureMessage = Readonly<{
   config: Readonly<Record<string, unknown>>;
 }>;
 
-const createPostMessage = (targetWindow: Window, windowOrigin: string) => (message: ExportMessage | LoadMessage | ConfigureMessage) =>
+type TemplateMessage = Readonly<{
+  action: "template",
+}>;
+
+const createPostMessage = (targetWindow: Window, windowOrigin: string) => (message: ExportMessage | LoadMessage | ConfigureMessage | TemplateMessage) =>
   targetWindow.postMessage(JSON.stringify(message), windowOrigin);
 
 type InitEvent = Readonly<{
