@@ -79,27 +79,36 @@ export const IntegrationApp: FC = () => {
       )}
       <main>
         {value
-          ? <div className="preview-grid">
-            <Button
-              type={ButtonType.SecondaryDestructive}
-              onClick={() => setValue(null)}
-              style={{ gridArea: "btn" }}
-            >
-              Delete diagram
-            </Button>
-            <img
-              alt="Preview of the current diagram"
-              height={value.dimensions.height}
-              width={value.dimensions.width}
-              src={value.dataUrl}
-              onClick={editorWindow ? focusEditor : editDiagram}
-              style={{
-                border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
-                gridArea: "preview",
-                cursor: "pointer",
-              }}
-            />
-          </div>
+          ? (
+            <div className="preview-grid">
+              <div className="edit-btns" style={{ gridArea: "btns" }}>
+                <Button
+                  type={ButtonType.Primary}
+                  onClick={editorWindow ? focusEditor : editDiagram}
+                >
+                  {editorWindow ? "Focus diagram editor" : "Edit diagram"}
+                </Button>
+                <Button
+                  type={ButtonType.SecondaryDestructive}
+                  onClick={() => setValue(null)}
+                >
+                  Delete diagram
+                </Button>
+              </div>
+              <img
+                alt="Preview of the current diagram"
+                height={value.dimensions.height}
+                width={value.dimensions.width}
+                src={value.dataUrl}
+                onClick={editorWindow ? focusEditor : editDiagram}
+                style={{
+                  border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
+                  gridArea: "preview",
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+          )
           : (
             <Button
               type={ButtonType.Primary}

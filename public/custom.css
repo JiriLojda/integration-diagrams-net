@@ -9,12 +9,21 @@ main {
 .preview-grid {
   display: grid;
   grid-template-areas:
-    ". btn"
+    ". btns"
     "preview preview";
   grid-template-columns: auto min-content;
   grid-template-rows: min-content auto;
+  row-gap: 10px;
   width: 100%;
   justify-items: center;
+}
+
+.edit-btns {
+  display: flex;
+}
+
+.edit-btns > button + .edit-btns > button {
+  margin-left: 10px;
 }
 
 .notification-bar {
