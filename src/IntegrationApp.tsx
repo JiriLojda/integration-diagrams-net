@@ -96,6 +96,7 @@ export const IntegrationApp: FC = () => {
               style={{
                 border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
                 gridArea: "preview",
+                cursor: "pointer",
               }}
             />
           </div>
