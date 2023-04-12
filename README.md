@@ -39,6 +39,8 @@ Netlify has made this easy. If you click the deploy button below, it will guide 
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/JiriLojda/integration-diagrams-net)
 
+> The repository has the [continuous delivery configuration](./.github/workflows/deploy.yml) using GitHub Actions being triggered by the new release and releasing to `gh-pages` branch. This setup is used for internal purposes. If you want to use the custom element, the recommended way is to fork the repository, make a code review, and deploy the repository on your own.
+
 ## Saved value
 
 This is an example of a value saved in the custom element that can be used on your site. Keep in mind that it is serialized into string.
