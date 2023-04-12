@@ -1,6 +1,7 @@
 {
   "name": "integration-template-react",
   "version": "1.0.0",
+  "homepage": ".",
   "dependencies": {
     "@gabrielurbina/type-guard": "^0.1.14",
     "@testing-library/jest-dom": "^5.16.5",
