@@ -35,6 +35,7 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
         if (!value) {
           postMessage({
             action: "template",
+            callback: true,
           });
         }
         else {
@@ -75,6 +76,15 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
         });
         return;
       }
+      case "template": {
+        postMessage({
+          action: "load",
+          xml: (data.blank || !data.xml) ? "" : data.xml,
+          autosave: 1,
+        });
+        sendExportMessage();
+        return;
+      }
       case "exit": {
         closeEditor();
         return;
@@ -94,12 +104,13 @@ type LoadMessage = Readonly<{
 }>;
 
 type ConfigureMessage = Readonly<{
-  action: "configure",
+  action: "configure";
   config: Readonly<Record<string, unknown>>;
 }>;
 
 type TemplateMessage = Readonly<{
-  action: "template",
+  action: "template";
+  callback?: true;
 }>;
 
 const createPostMessage = (targetWindow: Window, windowOrigin: string) => (message: ExportMessage | LoadMessage | ConfigureMessage | TemplateMessage) =>
@@ -130,8 +141,13 @@ type ExitEvent = Readonly<{
 type ConfigureEvent = Readonly<{
   event: "configure";
 }>;
+type TemplateEvent = Readonly<{
+  event: "template";
+  xml?: string;
+  blank?: boolean;
+}>;
 
-type PossibleEventsOrdered = readonly [InitEvent, AutosaveEvent, SaveEvent, ExportEvent, ExitEvent, ConfigureEvent];
+type PossibleEventsOrdered = readonly [InitEvent, AutosaveEvent, SaveEvent, ExportEvent, ExitEvent, ConfigureEvent, TemplateEvent];
 
 type ExpectedEvent = PossibleEventsOrdered[number];
 
@@ -166,13 +182,19 @@ const isConfigureEvent: (v: unknown) => v is ConfigureEvent = tg.ObjectOf({
   event: tg.ValueOf(["configure" as const]),
 });
 
+const isTemplateEvent: (v: unknown) => v is TemplateEvent = tg.ObjectOf({
+  event: tg.ValueOf(["template"] as const),
+  xml: tg.OptionalOf(tg.isString),
+  blank: tg.OptionalOf(tg.isBoolean),
+});
+
 type MakeGuards<T, Accum extends readonly any[] = []> = T extends readonly [infer First, ...infer Rest]
   ? MakeGuards<Rest, [...Accum, tg.Guard<First>]>
   : Accum;
 
 type EventGuards = MakeGuards<PossibleEventsOrdered>;
 
-const eventGuards: EventGuards = [isInitEvent, isAutosaveEvent, isSaveEvent, isExportEvent, isExitEvent, isConfigureEvent];
+const eventGuards: EventGuards = [isInitEvent, isAutosaveEvent, isSaveEvent, isExportEvent, isExitEvent, isConfigureEvent, isTemplateEvent];
 
 const isExpectedEvent: (v: unknown) => v is ExpectedEvent = tg.OneOf(eventGuards);
 
