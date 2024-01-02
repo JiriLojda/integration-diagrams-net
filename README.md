@@ -31,7 +31,7 @@ You can also provide a [configuration](#Configuration) to the element, but it is
 ## Configuration
 
 You can provide an optional configuration. See the example bellow.
-https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L3-L13
+https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L3-L14
 
 ## Deploy
 
@@ -46,7 +46,15 @@ Netlify has made this easy. If you click the deploy button below, it will guide 
 ## Saved value
 
 This is an example of a value saved in the custom element that can be used on your site. Keep in mind that it is serialized into string.
-https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L15-L22
+https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L16-L23
+
+# Known Issues
+
+## Value is too large for Kontent.ai with a custom font used in the diagram.
+
+When using the `previewImageFormat: "svg"` and a custom font in the diagram, diagrams.net includes the whole font in the data-url for preview.
+This makes it (and the value as the data-url is saved as well) too large.
+To avoid the problem, set `previewImageFormat: "png"` in your configuration. Png's don't have this problem, but are usually bigger so the svg is the default.
 
 # Contributing
 

@@ -25,7 +25,7 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
     const sendExportMessage = () => {
       postMessage({
         action: "export",
-        format: "svg",
+        format: config?.previewImageFormat,
       });
     };
 
@@ -94,7 +94,7 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
 
 type ExportMessage = Readonly<{
   action: "export";
-  format: "svg";
+  format: "svg" | "png" | undefined;
 }>;
 
 type LoadMessage = Readonly<{
