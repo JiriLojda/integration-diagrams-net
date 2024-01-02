@@ -15,6 +15,7 @@ export type Config = Readonly<{
     color: string;
     weight: number;
   }>;
+  previewImageFormat?: "svg" | "png"; // svg is the default
   configuration?: Readonly<Record<string, unknown>>;
 }>;
 
@@ -75,6 +76,7 @@ const isStrictlyConfig: (v: unknown) => v is Config = tg.ObjectOf({
     color: tg.isString,
     weight: tg.isNumber,
   })),
+  previewImageFormat: tg.ValueOf(["svg", "png"] as const),
   configuration: tg.OptionalOf(tg.isObject),
 });
 
