@@ -31,7 +31,7 @@ You can also provide a [configuration](#Configuration) to the element, but it is
 ## Configuration
 
 You can provide an optional configuration. See the example bellow.
-https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L3-L14
+https://github.com/JiriLojda/integration-diagrams-net/blob/8f9d0d62ae2efed67da746146e63400a464dc6d7/src/constants/readmeSnippets.ts#L3-L14
 
 ## Deploy
 
@@ -46,7 +46,7 @@ Netlify has made this easy. If you click the deploy button below, it will guide 
 ## Saved value
 
 This is an example of a value saved in the custom element that can be used on your site. Keep in mind that it is serialized into string.
-https://github.com/JiriLojda/integration-diagrams-net/blob/7b6c360b4c68aec62fa28b3593b9e77dbdb1bbd1/src/constants/readmeSnippets.ts#L16-L23
+https://github.com/JiriLojda/integration-diagrams-net/blob/8f9d0d62ae2efed67da746146e63400a464dc6d7/src/constants/readmeSnippets.ts#L16-L23
 
 # Known Issues
 
