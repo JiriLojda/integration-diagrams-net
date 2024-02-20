@@ -15,9 +15,20 @@ export type Config = Readonly<{
     color: string;
     weight: number;
   }>;
-  previewImageFormat?: "svg" | "png"; // svg is the default
+  previewImageFormat?: PngImageFormatConfig | SvgImageFormatConfig; // svg is the default
   configuration?: Readonly<Record<string, unknown>>;
 }>;
+
+type PngImageFormatConfig = Readonly<{ format: "png" }>;
+
+type SvgImageFormatConfig = Readonly<{
+  format: "svg";
+  customFont?: SvgFontUrlConfig | SvgFontFaceDefinitionConfig;
+}>;
+
+type SvgFontUrlConfig = Readonly<{ customFontConfigType: "nameAndUrl"; fontName: string; fontUrl: string }>;
+
+type SvgFontFaceDefinitionConfig = Readonly<{ customFontConfigType: "fontFaceDefinition"; fontFaceDefinition: string }>;
 
 type Params = Readonly<{
   heightPadding: number;
@@ -71,12 +82,23 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
   }
 };
 
+const isPngFormatConfig: (v: unknown) => v is PngImageFormatConfig = tg.ObjectOf({ format: tg.ValueOf(["png"]) });
+
+const isSvgFontUrlConfig: (v: unknown) => v is SvgFontUrlConfig = tg.ObjectOf({ customFontConfigType: tg.ValueOf(["nameAndUrl"]), fontName: tg.isString, fontUrl: tg.isString });
+
+const isSvgFontFaceDefinitionConfig: (v: unknown) => v is SvgFontFaceDefinitionConfig = tg.ObjectOf({ customFontConfigType: tg.ValueOf(["fontFaceDefinition"]), fontFaceDefinition: tg.isString });
+
+const isSvgFormatConfig: (v: unknown) => v is SvgImageFormatConfig = tg.ObjectOf({
+  format: tg.ValueOf(["svg"]),
+  customFont: tg.OptionalOf(tg.OneOf([isSvgFontUrlConfig, isSvgFontFaceDefinitionConfig])),
+});
+
 const isStrictlyConfig: (v: unknown) => v is Config = tg.ObjectOf({
   previewBorder: tg.OptionalOf(tg.ObjectOf({
     color: tg.isString,
     weight: tg.isNumber,
   })),
-  previewImageFormat: tg.ValueOf(["svg", "png"] as const),
+  previewImageFormat: tg.OptionalOf(tg.OneOf([isPngFormatConfig, isSvgFormatConfig])),
   configuration: tg.OptionalOf(tg.isObject),
 });
 

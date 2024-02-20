@@ -25,7 +25,7 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
     const sendExportMessage = () => {
       postMessage({
         action: "export",
-        format: config?.previewImageFormat,
+        format: config?.previewImageFormat?.format,
       });
     };
 
@@ -66,9 +66,10 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
         return;
       }
       case "export": {
+        const svgStyleDef = config?.previewImageFormat?.format === "svg" ? createSvgStyleDef(config.previewImageFormat) : null;
         setValue({
           xml: data.xml,
-          dataUrl: data.data,
+          dataUrl: svgStyleDef ? replaceStyleDef(data.data, svgStyleDef) : data.data,
           dimensions: {
             width: Math.ceil(data.bounds.width),
             height: Math.ceil(data.bounds.height),
@@ -90,7 +91,35 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
         return;
       }
     }
+  };
+
+const createSvgStyleDef = (config: Config["previewImageFormat"] & { format: "svg" }) => {
+  switch (config.customFont?.customFontConfigType) {
+    case undefined:
+      return null;
+    case "nameAndUrl":
+      return `@font-face { font-family: "${config.customFont.fontName}"; src: url("${config.customFont.fontUrl}"); }`;
+    case "fontFaceDefinition":
+      return config.customFont.fontFaceDefinition;
+    default:
+      throw new Error(`Unknown customFontConfigType "${(config.customFont as any).customFontConfigType}"`);
   }
+};
+
+const replaceStyleDef = (dataUrl: string, newStyleDef: string): string => {
+  const dataUrlPrefix = "data:image/svg+xml;base64,";
+  const inputBase64 = dataUrl.replace(dataUrlPrefix, "");
+  const inputBase64Bytes = Uint8Array.from(atob(inputBase64), m => m?.codePointAt(0) ?? 0);
+  const decodedSvg = new TextDecoder().decode(inputBase64Bytes);
+
+  // replace the style tag
+  const svgWithReplacedStyleDef = decodedSvg.replace(/<defs><style type="text\/css">.+<\/style><\/defs>/, `<defs><style type="text/css">${newStyleDef}</style></defs>`);
+
+  const resultBytes = new TextEncoder().encode(svgWithReplacedStyleDef);
+  const resultBase64 = btoa(String.fromCodePoint(...resultBytes));
+
+  return dataUrlPrefix + resultBase64;
+};
 
 type ExportMessage = Readonly<{
   action: "export";
