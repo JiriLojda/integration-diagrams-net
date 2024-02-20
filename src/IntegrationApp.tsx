@@ -95,18 +95,42 @@ export const IntegrationApp: FC = () => {
                   Delete diagram
                 </Button>
               </div>
-              <img
-                alt="Preview of the current diagram"
-                height={value.dimensions.height}
-                width={value.dimensions.width}
-                src={value.dataUrl}
-                onClick={editorWindow ? focusEditor : editDiagram}
-                style={{
-                  border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
-                  gridArea: "preview",
-                  cursor: "pointer",
-                }}
-              />
+              {config?.previewImageFormat?.format === "svg" && config.previewImageFormat.customFont
+                ? (
+                  <div
+                    onClick={editorWindow ? focusEditor : editDiagram}
+                    style={{
+                      border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
+                      gridArea: "preview",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <object
+                      data={value.dataUrl}
+                      type="image/svg+xml"
+                      height={value.dimensions.height}
+                      width={value.dimensions.width}
+                      style={{ pointerEvents: "none" }} // we must handle click in the parent div as click events are not triggered from the object element 
+                    >
+                      Preview of the current diagram
+                    </object>
+                  </div>
+                )
+                : (
+                  <img
+                    alt="Preview of the current diagram"
+                    height={value.dimensions.height}
+                    width={value.dimensions.width}
+                    src={value.dataUrl}
+                    onClick={editorWindow ? focusEditor : editDiagram}
+                    style={{
+                      border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
+                      gridArea: "preview",
+                      cursor: "pointer",
+                    }}
+                  />
+                )
+              }
             </div>
           )
           : (

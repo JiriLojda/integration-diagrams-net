@@ -52,9 +52,27 @@ https://github.com/JiriLojda/integration-diagrams-net/blob/8f9d0d62ae2efed67da74
 
 ## Value is too large for Kontent.ai with a custom font used in the diagram.
 
-When using the `previewImageFormat: "svg"` and a custom font in the diagram, diagrams.net includes the whole font in the data-url for preview.
+When using the `"previewImageFormat": { "format": "svg" }` and a custom font in the diagram, diagrams.net includes the whole font in the data-url for preview.
 This makes it (and the value as the data-url is saved as well) too large.
-To avoid the problem, set `previewImageFormat: "png"` in your configuration. Png's don't have this problem, but are usually bigger so the svg is the default.
+To avoid the problem, you can do one of the following:
+* Set `"previewImageFormat": { "format": "png" }` in your configuration. PNG's don't have this problem, but are usually bigger and don't scale so the SVG is the default.
+* Make the integration replace the custom font in the SVG with your font's url. You will need to provide the url in the configuration. Please, keep in mind that SVGs with links to external sources won't load the source in the `<img />` tag. You will need to use the `<object />` tag to display such an SVG.
+```jsonc
+{
+  "previewImageFormat": { 
+    "format": "svg"
+    "customFontConfigType": "nameAndUrl",
+    "fontName": "<your font name>",
+    "fontUrl": "<your font url>"
+  },
+  // or
+  "previewImageFormat": { 
+    "format": "svg"
+    "customFontConfigType": "fontFaceDefinition",
+    "fontFaceDefinition": "@font-face { font-name: 'your-font-name'; src: 'your-font-url'; }" // this allows more flexibility, you can have multiple @font-face definitions and custom font-face properties
+  }
+}
+```
 
 # Contributing
 
