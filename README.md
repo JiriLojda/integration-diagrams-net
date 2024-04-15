@@ -60,16 +60,20 @@ To avoid the problem, you can do one of the following:
 ```jsonc
 {
   "previewImageFormat": { 
-    "format": "svg"
-    "customFontConfigType": "nameAndUrl",
-    "fontName": "<your font name>",
-    "fontUrl": "<your font url>"
+    "format": "svg",
+    "customFont": {
+      "customFontConfigType": "nameAndUrl",
+      "fontName": "<your font name>",
+      "fontUrl": "<your font url>"
+    }
   },
   // or
   "previewImageFormat": { 
     "format": "svg"
-    "customFontConfigType": "fontFaceDefinition",
-    "fontFaceDefinition": "@font-face { font-name: 'your-font-name'; src: 'your-font-url'; }" // this allows more flexibility, you can have multiple @font-face definitions and custom font-face properties
+    "customFont": {
+      "customFontConfigType": "fontFaceDefinition",
+      "fontFaceDefinition": "@font-face { font-name: 'your-font-name'; src: 'your-font-url'; }" // this allows more flexibility, you can have multiple @font-face definitions and custom font-face properties
+    }
   }
 }
 ```
