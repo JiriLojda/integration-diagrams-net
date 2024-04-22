@@ -106,10 +106,10 @@ export const IntegrationApp: FC = () => {
                     }}
                   >
                     <object
-                      data={value.dataUrl}
+                      data={value.image.url}
                       type="image/svg+xml"
-                      height={value.dimensions.height}
-                      width={value.dimensions.width}
+                      height={value.image.dimensions.height}
+                      width={value.image.dimensions.width}
                       style={{ pointerEvents: "none" }} // we must handle click in the parent div as click events are not triggered from the object element 
                     >
                       Preview of the current diagram
@@ -119,9 +119,9 @@ export const IntegrationApp: FC = () => {
                 : (
                   <img
                     alt="Preview of the current diagram"
-                    height={value.dimensions.height}
-                    width={value.dimensions.width}
-                    src={value.dataUrl}
+                    height={value.image.dimensions.height}
+                    width={value.image.dimensions.width}
+                    src={value.image.url}
                     onClick={editorWindow ? focusEditor : editDiagram}
                     style={{
                       border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,

@@ -14,6 +14,16 @@ export const exampleConfiguration: Required<Config> = {
     //   // fontFaceDefinition: "<font face definition>", // this must only be used with customFontConfigType: "fontFaceDefinition"
     // }
   },
+  imageStorage: { // specify to save the generated diagram svg into a remote storage
+    url: "https://my-storage.com/blob/{fileName}", // url of a remote storage to save the diagram image
+    httpMethod: "PUT", // optional custom http method (the image is put into the body), the default is POST
+    headers: {}, // optional custom headers to add to the request (e.g. authorization)
+    delete: { // optionally specify a request to trigger when the diagram is removed (to remove it from the remote storage)
+      url: "https://my-storage.com/blob/{fileName}", // url to use to delete the diagram image
+      httpMethod: "PUT", // optional custom http method (the image is put into the body), the default is DELETE
+      headers: {}, // optional custom headers to add to the request (e.g. authorization)
+    }
+  },
   configuration: { // diagrams.net configuration, see https://www.diagrams.net/doc/faq/configure-diagram-editor for available keys
     colorNames: {
       "000000": "Our color",
@@ -23,10 +33,12 @@ export const exampleConfiguration: Required<Config> = {
 
 export const exampleValue: Value = {
   xml: "...", // the diagram in xml format used by diagrams.net
-  dataUrl: "...", // data-url of svg preview of the diagram for preview
-  dimensions: { // dimensions of the diagram calculated by diagrams.net
-    width: 100,
-    height: 100,
-  },
+  image: {
+    url: "...", // data-url of svg preview of the diagram for preview or a url to the remote storage specified in configuration
+    dimensions: { // dimensions of the diagram calculated by diagrams.net
+      width: 100,
+      height: 100,
+    },
+  }
 };
 

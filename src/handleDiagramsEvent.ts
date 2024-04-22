@@ -1,12 +1,13 @@
 import * as tg from "@gabrielurbina/type-guard";
-import { Config, Value } from "./useCustomElementContext";
+import { Config, DiagramsNetExport, Value } from "./useCustomElementContext";
+import { decodeDataUrl, encodeToDataUrl } from "./utils/dataUrls";
 
 type Params = Readonly<{
   editorWindowOrigin: string;
   editorWindow: Window;
   closeEditor: () => void;
   value: Value | null;
-  setValue: (v: Value) => void;
+  setValue: (v: DiagramsNetExport) => void;
   config: Config | null;
 }>;
 
@@ -69,11 +70,13 @@ export const handleDiagramsEvent = ({ config, editorWindowOrigin, editorWindow, 
         const svgStyleDef = config?.previewImageFormat?.format === "svg" ? createSvgStyleDef(config.previewImageFormat) : null;
         setValue({
           xml: data.xml,
-          dataUrl: svgStyleDef ? replaceStyleDef(data.data, svgStyleDef) : data.data,
-          dimensions: {
-            width: Math.ceil(data.bounds.width),
-            height: Math.ceil(data.bounds.height),
-          },
+          image: {
+            dataUrl: svgStyleDef ? replaceStyleDef(data.data, svgStyleDef) : data.data,
+            dimensions: {
+              width: Math.ceil(data.bounds.width),
+              height: Math.ceil(data.bounds.height),
+            },
+          }
         });
         return;
       }
@@ -107,18 +110,12 @@ const createSvgStyleDef = (config: Config["previewImageFormat"] & { format: "svg
 };
 
 const replaceStyleDef = (dataUrl: string, newStyleDef: string): string => {
-  const dataUrlPrefix = "data:image/svg+xml;base64,";
-  const inputBase64 = dataUrl.replace(dataUrlPrefix, "");
-  const inputBase64Bytes = Uint8Array.from(atob(inputBase64), m => m?.codePointAt(0) ?? 0);
-  const decodedSvg = new TextDecoder().decode(inputBase64Bytes);
+  const decodedSvg = decodeDataUrl(dataUrl);
 
   // replace the style tag
   const svgWithReplacedStyleDef = decodedSvg.replace(/<defs><style type="text\/css">.+<\/style><\/defs>/, `<defs><style type="text/css">${newStyleDef}</style></defs>`);
 
-  const resultBytes = new TextEncoder().encode(svgWithReplacedStyleDef);
-  const resultBase64 = btoa(String.fromCodePoint(...resultBytes));
-
-  return dataUrlPrefix + resultBase64;
+  return encodeToDataUrl(svgWithReplacedStyleDef);
 };
 
 type ExportMessage = Readonly<{

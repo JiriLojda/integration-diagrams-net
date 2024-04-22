@@ -1,14 +1,32 @@
 import * as tg from "@gabrielurbina/type-guard";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { decodeDataUrl } from "./utils/dataUrls";
+import { v4 as createUuid } from "uuid";
 
 export type Value = Readonly<{
   xml: string;
-  dataUrl: string;
-  dimensions: Readonly<{
-    width: number;
-    height: number;
+  image: Readonly<{
+    url: string;
+    fileName?: string;
+    dimensions: Readonly<{
+      width: number;
+      height: number;
+    }>;
   }>;
 }>;
+
+export type DiagramsNetExport = Readonly<{
+  xml: string;
+  image: Readonly<{
+    dataUrl: string;
+    dimensions: Readonly<{
+      width: number;
+      height: number;
+    }>;
+  }>;
+}>;
+
+const fileNameMacro = "{fileName}";
 
 export type Config = Readonly<{
   previewBorder?: Readonly<{
@@ -16,6 +34,16 @@ export type Config = Readonly<{
     weight: number;
   }>;
   previewImageFormat?: PngImageFormatConfig | SvgImageFormatConfig; // svg is the default
+  imageStorage?: Readonly<{
+    url: string;
+    httpMethod?: string;
+    headers?: Readonly<Record<string, string>>;
+    delete?: Readonly<{
+      url: string;
+      httpMethod?: string;
+      headers?: Readonly<Record<string, string>>;
+    }>;
+  }>;
   configuration?: Readonly<Record<string, unknown>>;
 }>;
 
@@ -42,11 +70,24 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
   const [height, setHeight] = useState(heightPadding + emptyHeight)
   const [isLoading, setIsLoading] = useState(true);
 
-  const updateValue = useCallback((v: Value | null) => {
-    setValue(v);
-    CustomElement.setValue(JSON.stringify(v));
-    setHeight((v?.dimensions.height ?? emptyHeight) + heightPadding);
-  }, [emptyHeight, heightPadding]);
+  const updateValue = useCallback(async (v: DiagramsNetExport | null) => {
+    if (v === null) {
+      setValue(null);
+      CustomElement.setValue(JSON.stringify(null));
+      setHeight(emptyHeight);
+      if (value?.image.fileName && config?.imageStorage?.delete) {
+        await fetch(config.imageStorage.delete.url.replaceAll(fileNameMacro, value.image.fileName), {
+          method: config.imageStorage.delete.httpMethod ?? "DELETE",
+          headers: config.imageStorage.delete.headers,
+        });
+      }
+      return;
+    }
+    const newValue = await prepareExportToSave(v, config ?? {}, value);
+    setValue(newValue);
+    CustomElement.setValue(JSON.stringify(newValue));
+    setHeight((newValue?.image.dimensions.height ?? emptyHeight) + heightPadding);
+  }, [emptyHeight, heightPadding, config, value]);
 
   useLayoutEffect(() => {
     CustomElement.setHeight(height);
@@ -64,7 +105,7 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
       setConfig(element.config);
       setIsDisabled(element.disabled);
       setValue(parsedValue);
-      setHeight((parsedValue?.dimensions.height ?? emptyHeight) + heightPadding);
+      setHeight((parsedValue?.image.dimensions.height ?? emptyHeight) + heightPadding);
       setIsLoading(false);
     });
   }, [emptyHeight, heightPadding]);
@@ -99,6 +140,16 @@ const isStrictlyConfig: (v: unknown) => v is Config = tg.ObjectOf({
     weight: tg.isNumber,
   })),
   previewImageFormat: tg.OptionalOf(tg.OneOf([isPngFormatConfig, isSvgFormatConfig])),
+  imageStorage: tg.OptionalOf(tg.ObjectOf({
+    url: tg.isString,
+    httpMethod: tg.OptionalOf(tg.isString),
+    headers: tg.OptionalOf(tg.isObject),
+    delete: tg.OptionalOf(tg.ObjectOf({
+      url: tg.isString,
+      httpMethod: tg.OptionalOf(tg.isString),
+      headers: tg.OptionalOf(tg.isObject),
+    })),
+  })),
   configuration: tg.OptionalOf(tg.isObject),
 });
 
@@ -106,11 +157,13 @@ const isConfig: (v: unknown) => v is Config | null = tg.OneOf([tg.isNull, isStri
 
 const isValue: (v: unknown) => v is Value = tg.ObjectOf({
   xml: tg.isString,
-  dataUrl: tg.isString,
-  dimensions: tg.ObjectOf({
-    width: tg.isNumber,
-    height: tg.isNumber,
-  }),
+  image: tg.ObjectOf({
+    url: tg.isString,
+    dimensions: tg.ObjectOf({
+      width: tg.isNumber,
+      height: tg.isNumber,
+    }),
+  })
 });
 
 const parseValue = (value: string): Value | null => {
@@ -123,5 +176,44 @@ const parseValue = (value: string): Value | null => {
   }
 
   return parsedValue;
-}
+};
+
+const prepareExportToSave = async (exportData: DiagramsNetExport, config: Config, oldValue: Value | null): Promise<Value> => {
+  if (config.imageStorage && config.previewImageFormat?.format === "png") {
+    throw new Error("Only svg format is supported for remote storage option for now.");
+  }
+  if (config.imageStorage) {
+    const fileContent = decodeDataUrl(exportData.image.dataUrl);
+    const fileName = oldValue?.image.fileName ?? `${createUuid()}.svg`;
+    const url = config.imageStorage.url.replaceAll(fileNameMacro, fileName);
+
+    await fetch(url, {
+      body: fileContent,
+      method: config.imageStorage.httpMethod ?? "POST",
+      headers: {
+        "content-length": fileContent.length.toString(),
+        "content-type": "image/svg",
+        "date": new Date().toUTCString(),
+        ...config.imageStorage.headers ?? {},
+      },
+    });
+
+    return {
+      xml: exportData.xml,
+      image: {
+        url,
+        fileName,
+        dimensions: exportData.image.dimensions,
+      },
+    };
+  }
+
+  return {
+    xml: exportData.xml,
+    image: {
+      url: exportData.image.dataUrl,
+      dimensions: exportData.image.dimensions,
+    },
+  };
+};
 
