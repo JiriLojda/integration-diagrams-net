@@ -159,6 +159,7 @@ const isValue: (v: unknown) => v is Value = tg.ObjectOf({
   xml: tg.isString,
   image: tg.ObjectOf({
     url: tg.isString,
+    fileName: tg.OptionalOf(tg.isString),
     dimensions: tg.ObjectOf({
       width: tg.isNumber,
       height: tg.isNumber,
