@@ -103,6 +103,7 @@ export const IntegrationApp: FC = () => {
                       border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
                       gridArea: "preview",
                       cursor: "pointer",
+                      maxWidth: "100%",
                     }}
                   >
                     <object
@@ -110,7 +111,7 @@ export const IntegrationApp: FC = () => {
                       type="image/svg+xml"
                       height={value.image.dimensions.height}
                       width={value.image.dimensions.width}
-                      style={{ pointerEvents: "none" }} // we must handle click in the parent div as click events are not triggered from the object element 
+                      style={{ pointerEvents: "none", maxWidth: "100%" }} // we must handle click in the parent div as click events are not triggered from the object element 
                     >
                       Preview of the current diagram
                     </object>
@@ -127,6 +128,7 @@ export const IntegrationApp: FC = () => {
                       border: config?.previewBorder ? `${config.previewBorder.color} solid ${config.previewBorder.weight}px` : undefined,
                       gridArea: "preview",
                       cursor: "pointer",
+                      maxWidth: "100%",
                     }}
                   />
                 )
