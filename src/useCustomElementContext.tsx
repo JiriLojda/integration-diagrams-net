@@ -142,9 +142,12 @@ const isStrictlyConfig: (v: unknown) => v is Config = tg.ObjectOf({
   })),
   previewImageFormat: tg.OptionalOf(tg.OneOf([isPngFormatConfig, isSvgFormatConfig])),
   imageStorage: tg.OptionalOf(tg.ObjectOf({
-    url: tg.isString,
-    httpMethod: tg.OptionalOf(tg.isString),
-    headers: tg.OptionalOf(tg.isObject),
+    read: tg.ObjectOf({ url: tg.isString }),
+    create: tg.ObjectOf({
+      url: tg.isString,
+      httpMethod: tg.OptionalOf(tg.isString),
+      headers: tg.OptionalOf(tg.isObject),
+    }),
     delete: tg.OptionalOf(tg.ObjectOf({
       url: tg.isString,
       httpMethod: tg.OptionalOf(tg.isString),
