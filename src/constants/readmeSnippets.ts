@@ -15,9 +15,14 @@ export const exampleConfiguration: Required<Config> = {
     // }
   },
   imageStorage: { // specify to save the generated diagram svg into a remote storage
-    url: "https://my-storage.com/blob/{fileName}", // url of a remote storage to save the diagram image
-    httpMethod: "PUT", // optional custom http method (the image is put into the body), the default is POST
-    headers: {}, // optional custom headers to add to the request (e.g. authorization)
+    read: {
+      url: "https://my-storage.com/blob/{fileName}", // url of a remote storage to read the diagram image
+    },
+    create: {
+      url: "https://my-storage.com/blob/{fileName}?create=true", // url of a remote storage to save the diagram image
+      httpMethod: "PUT", // optional custom http method (the image is put into the body), the default is POST
+      headers: {}, // optional custom headers to add to the request (e.g. authorization)
+    },
     delete: { // optionally specify a request to trigger when the diagram is removed (to remove it from the remote storage)
       url: "https://my-storage.com/blob/{fileName}", // url to use to delete the diagram image
       httpMethod: "PUT", // optional custom http method (the image is put into the body), the default is DELETE

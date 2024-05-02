@@ -35,16 +35,17 @@ export type Config = Readonly<{
   }>;
   previewImageFormat?: PngImageFormatConfig | SvgImageFormatConfig; // svg is the default
   imageStorage?: Readonly<{
-    url: string;
-    httpMethod?: string;
-    headers?: Readonly<Record<string, string>>;
-    delete?: Readonly<{
-      url: string;
-      httpMethod?: string;
-      headers?: Readonly<Record<string, string>>;
-    }>;
+    read: Readonly<{ url: string }>;
+    create: HttpResource;
+    delete?: HttpResource;
   }>;
   configuration?: Readonly<Record<string, unknown>>;
+}>;
+
+type HttpResource = Readonly<{
+  url: string;
+  httpMethod?: string;
+  headers?: Readonly<Record<string, string>>;
 }>;
 
 type PngImageFormatConfig = Readonly<{ format: "png" }>;
@@ -76,7 +77,7 @@ export const useCustomElementContext = ({ heightPadding, emptyHeight }: Params) 
       CustomElement.setValue(JSON.stringify(null));
       setHeight(emptyHeight);
       if (value?.image.fileName && config?.imageStorage?.delete) {
-        await fetch(config.imageStorage.delete.url.replaceAll(fileNameMacro, value.image.fileName), {
+        await fetch(replaceMacros({ url: config.imageStorage.delete.url, fileName: value.image.fileName }), {
           method: config.imageStorage.delete.httpMethod ?? "DELETE",
           headers: config.imageStorage.delete.headers,
         });
@@ -186,23 +187,23 @@ const prepareExportToSave = async (exportData: DiagramsNetExport, config: Config
   if (config.imageStorage) {
     const fileContent = decodeDataUrl(exportData.image.dataUrl);
     const fileName = oldValue?.image.fileName ?? `${createUuid()}.svg`;
-    const url = config.imageStorage.url.replaceAll(fileNameMacro, fileName);
+    const createUrl = replaceMacros({ url: config.imageStorage.create.url, fileName });
 
-    await fetch(url, {
+    await fetch(createUrl, {
       body: fileContent,
-      method: config.imageStorage.httpMethod ?? "POST",
+      method: config.imageStorage.create.httpMethod ?? "POST",
       headers: {
         "content-length": fileContent.length.toString(),
         "content-type": "image/svg",
         "date": new Date().toUTCString(),
-        ...config.imageStorage.headers ?? {},
+        ...config.imageStorage.create.headers ?? {},
       },
     });
 
     return {
       xml: exportData.xml,
       image: {
-        url,
+        url: replaceMacros({ url: config.imageStorage.read.url, fileName }),
         fileName,
         dimensions: exportData.image.dimensions,
       },
@@ -218,3 +219,10 @@ const prepareExportToSave = async (exportData: DiagramsNetExport, config: Config
   };
 };
 
+type ReplaceMacrosParams = Readonly<{
+  url: string;
+  fileName: string;
+}>;
+
+const replaceMacros = (params: ReplaceMacrosParams) =>
+  params.url.replaceAll(fileNameMacro, params.fileName);
